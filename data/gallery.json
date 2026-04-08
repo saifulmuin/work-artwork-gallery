@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "image": "images/sample1.jpg",
+    "description": "Minimal product composition with clean shapes and soft directional light.",
+    "order": 1
+  },
+  {
+    "id": 2,
+    "image": "images/sample2.jpg",
+    "description": "Architectural angle study focused on lines, contrast, and modern symmetry.",
+    "order": 2
+  },
+  {
+    "id": 3,
+    "image": "images/sample3.jpg",
+    "description": "Lifestyle editorial frame with layered textures and warm atmosphere.",
+    "order": 3
+  },
+  {
+    "id": 4,
+    "image": "images/sample4.jpg",
+    "description": "Detail shot highlighting material finish, depth, and visual storytelling.",
+    "order": 4
+  }
+]

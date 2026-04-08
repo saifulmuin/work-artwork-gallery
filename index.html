@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Gallery</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="gallery">
+  <div class="page-shell">
+    <header class="site-header container">
+      <div>
+        <p class="eyebrow">Portfolio Showcase</p>
+        <h1>Image Gallery</h1>
+        <p class="subtitle">A clean, responsive portfolio gallery powered by a simple JSON file.</p>
+      </div>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme">
+        <span class="theme-toggle__icon">☀</span>
+        <span class="theme-toggle__text">Light mode</span>
+      </button>
+    </header>
+
+    <main class="container">
+      <section id="gallerySection" aria-live="polite">
+        <div id="gallerySkeleton" class="gallery masonry-gallery skeleton-gallery" aria-hidden="true"></div>
+        <div id="galleryGrid" class="gallery masonry-gallery is-hidden"></div>
+        <div id="galleryEmpty" class="empty-state is-hidden">
+          <h2>No images found</h2>
+          <p>Add items to <code>data/gallery.json</code> or use the hidden admin page.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="lightbox" class="lightbox" aria-hidden="true" role="dialog" aria-label="Image preview">
+    <div class="lightbox__backdrop" data-close-lightbox="true"></div>
+    <div class="lightbox__panel">
+      <button class="lightbox__close" id="closeLightbox" type="button" aria-label="Close preview">✕</button>
+      <button class="lightbox__nav lightbox__nav--prev" id="prevImage" type="button" aria-label="Previous image">❮</button>
+      <button class="lightbox__nav lightbox__nav--next" id="nextImage" type="button" aria-label="Next image">❯</button>
+
+      <div class="lightbox__stage" id="lightboxStage">
+        <img id="lightboxImage" class="lightbox__image" src="" alt="" draggable="false" />
+      </div>
+
+      <div class="lightbox__footer">
+        <p id="lightboxCounter" class="lightbox__counter"></p>
+        <p id="lightboxDescription" class="lightbox__description"></p>
+        <p class="lightbox__hint">Scroll to zoom. Drag to pan when zoomed. Swipe or use arrows to navigate.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
