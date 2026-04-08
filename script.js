@@ -149,12 +149,14 @@ function renderGallery() {
     card.innerHTML = `
       <div class="gallery-card__image-wrap">
         <img class="gallery-card__image" src="${item.image}" alt="${escapeHtml(item.description || `Gallery image ${index + 1}`)}" loading="lazy" />
-        <div class="gallery-card__overlay">
-          <div class="gallery-card__description">${escapeHtml(item.description || 'No description')}</div>
-        </div>
+
       </div>
     `;
 
+    // ni barang yang boleh letak dekat line (atas) ke 4 dari sini - untuk bagi appear description dekat image masa dekat landing page
+       // <div class="gallery-card__overlay">
+       //   <div class="gallery-card__description">${escapeHtml(item.description || 'No description')}</div>
+       // </div>
     const img = card.querySelector('img');
     img.addEventListener('load', () => card.classList.add('is-loaded'));
     img.addEventListener('error', () => {
