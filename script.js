@@ -103,7 +103,7 @@ function showToast(message) {
 }
 
 function normalizeOrders() {
-  galleryItems = sortByOrder(galleryItems).map((item, index) => ({
+  galleryItems = galleryItems.map((item, index) => ({
     ...item,
     order: index + 1,
   }));
