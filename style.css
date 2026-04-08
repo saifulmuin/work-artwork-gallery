@@ -401,6 +401,11 @@ body.light-theme .lightbox__footer {
 .admin-item__description,
 .admin-item__path {
   color: var(--text-soft);
+  max-width: 250px; /* adjust ikut layout */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block; /* atau inline-block */
 }
 
 .section-heading--split,
