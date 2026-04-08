@@ -596,6 +596,73 @@ body.light-theme .lightbox__footer {
   line-height: 1.7;
 }
 
+
+.bulk-upload-heading {
+  margin-top: 28px;
+  padding-top: 6px;
+}
+
+#bulkImageLinks {
+  min-height: 180px;
+  resize: vertical;
+}
+
+.bulk-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 18px;
+  padding: 28px 20px;
+  text-align: center;
+  background: var(--bg-soft);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), transform var(--transition);
+}
+
+.bulk-dropzone:hover {
+  transform: translateY(-2px);
+}
+
+.bulk-dropzone.is-active {
+  border-color: var(--accent);
+  background: rgba(138, 180, 255, 0.08);
+}
+
+.bulk-dropzone__title {
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.bulk-dropzone__text {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.bulk-drop-list {
+  display: grid;
+  gap: 10px;
+}
+
+.bulk-drop-list__item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-soft);
+  padding: 12px 14px;
+  color: var(--text-soft);
+  word-break: break-word;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 @media (min-width: 600px) {
   .gallery { column-count: 2; }
   .skeleton-gallery { column-count: 2; }
@@ -659,14 +726,4 @@ body.light-theme .lightbox__footer {
   .admin-item__actions .btn {
     flex: 1;
   }
-}
-
-.bulk-upload-heading {
-  margin-top: 28px;
-  padding-top: 6px;
-}
-
-#bulkImageLinks {
-  min-height: 180px;
-  resize: vertical;
 }
