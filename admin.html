@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery Admin</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="admin">
+  <div class="page-shell">
+    <header class="site-header container site-header--admin">
+      <div>
+        <p class="eyebrow">Hidden Admin Panel</p>
+        <h1>Gallery Manager</h1>
+        <p class="subtitle">Manage portfolio items locally, then export the updated JSON file for GitHub Pages.</p>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme">
+          <span class="theme-toggle__icon">☀</span>
+          <span class="theme-toggle__text">Light mode</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="container admin-layout">
+      <section class="admin-card admin-card--form">
+        <div class="section-heading">
+          <h2>Add / Edit Image</h2>
+          <p>Images are not uploaded automatically. Add the file to <code>/images/</code> in your GitHub repo, then reference it here.</p>
+        </div>
+
+        <form id="adminForm" class="admin-form">
+          <input type="hidden" id="imageId" />
+
+          <label class="field">
+            <span>Image file</span>
+            <input id="imageFile" type="file" accept="image/*" />
+            <small>Optional preview only. Static sites cannot save uploads directly.</small>
+          </label>
+
+          <label class="field">
+            <span>Image path</span>
+            <input id="imagePath" type="text" placeholder="images/your-file.jpg" required />
+            <small>Example: <code>images/my-portfolio-shot.jpg</code></small>
+          </label>
+
+          <label class="field">
+            <span>Description</span>
+            <textarea id="imageDescription" rows="4" placeholder="Write a short description" required></textarea>
+          </label>
+
+          <label class="field">
+            <span>Order</span>
+            <input id="imageOrder" type="number" min="1" step="1" placeholder="Auto assigned if left blank" />
+          </label>
+
+          <div class="image-preview-card">
+            <div id="uploadPreview" class="upload-preview upload-preview--empty">
+              <span>Preview will appear here</span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn--primary" id="saveImageBtn">Save item</button>
+            <button type="button" class="btn" id="resetFormBtn">Reset</button>
+          </div>
+        </form>
+
+        <div class="section-heading bulk-upload-heading">
+          <h2>Bulk Upload Links</h2>
+          <p>Paste multiple image URLs below. One link per line, or mix with other text — the system will auto detect valid image links and add them as new items.</p>
+        </div>
+
+        <div class="admin-form">
+          <label class="field">
+            <span>Bulk image links</span>
+            <textarea id="bulkImageLinks" rows="8" placeholder="https://example.com/image-1.jpg
+https://example.com/image-2.png
+Any text is okay too — valid image links will still be detected."></textarea>
+            <small>New items will be added with empty descriptions so you can edit them one by one later.</small>
+          </label>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn--primary" id="bulkUploadBtn">Bulk Upload</button>
+            <button type="button" class="btn" id="clearBulkUploadBtn">Clear</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="admin-card admin-card--list">
+        <div class="section-heading section-heading--split">
+          <div>
+            <h2>Image List</h2>
+            <p>Drag cards to reorder, then export JSON to save changes back into your repo.</p>
+          </div>
+          <div class="toolbar">
+            <label class="btn btn--ghost file-label">
+              Import JSON
+              <input id="importJsonInput" type="file" accept="application/json" hidden />
+            </label>
+            <button id="exportJsonBtn" type="button" class="btn btn--primary">Export JSON</button>
+            <button id="resetLocalDataBtn" type="button" class="btn btn--danger">Reset Local Data</button>
+          </div>
+        </div>
+
+        <div class="admin-instructions note-box">
+          <strong>GitHub Pages workflow:</strong>
+          1) Upload your image files manually into <code>/images/</code>.<br />
+          2) Use this admin page to manage the list locally in your browser.<br />
+          3) Click <strong>Export JSON</strong> and replace <code>data/gallery.json</code> in your repository.
+        </div>
+
+        <div id="adminList" class="admin-list"></div>
+        <div id="adminEmpty" class="empty-state is-hidden">
+          <h2>No items yet</h2>
+          <p>Add your first image using the form on the left.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="adminItemTemplate">
+    <article class="admin-item" draggable="true">
+      <div class="drag-handle" title="Drag to reorder" aria-label="Drag to reorder">⋮⋮</div>
+      <div class="admin-item__thumb-wrap">
+        <img class="admin-item__thumb" alt="" />
+      </div>
+      <div class="admin-item__content">
+        <div class="admin-item__meta">
+          <span class="badge admin-item__order"></span>
+          <code class="admin-item__path"></code>
+        </div>
+        <p class="admin-item__description"></p>
+      </div>
+      <div class="admin-item__actions">
+        <button type="button" class="btn btn--small admin-edit">Edit</button>
+        <button type="button" class="btn btn--small admin-up">↑</button>
+        <button type="button" class="btn btn--small admin-down">↓</button>
+        <button type="button" class="btn btn--small btn--danger admin-delete">Delete</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>

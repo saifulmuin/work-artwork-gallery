@@ -407,6 +407,9 @@ function initAdminPage() {
   const importJsonInput = document.getElementById('importJsonInput');
   const resetLocalDataBtn = document.getElementById('resetLocalDataBtn');
 
+  const bulkImageLinksInput = document.getElementById('bulkImageLinks');
+  const bulkUploadBtn = document.getElementById('bulkUploadBtn');
+
   loadGalleryData().then(() => {
     renderAdminList();
   });
@@ -459,6 +462,64 @@ function initAdminPage() {
     persistGalleryData();
     renderAdminList();
     resetAdminForm();
+  });
+
+  bulkUploadBtn?.addEventListener('click', () => {
+    const rawText = bulkImageLinksInput?.value?.trim() || '';
+
+    if (!rawText) {
+      showToast('Paste your image links first.');
+      return;
+    }
+
+    const extractedLinks = extractImageLinks(rawText);
+
+    if (!extractedLinks.length) {
+      showToast('No valid image links found.');
+      return;
+    }
+
+    const existingImages = new Set(
+      galleryItems.map((item) => normalizeImageUrl(item.image))
+    );
+
+    let addedCount = 0;
+    let duplicateCount = 0;
+
+    extractedLinks.forEach((link) => {
+      const normalizedLink = normalizeImageUrl(link);
+
+      if (!normalizedLink || existingImages.has(normalizedLink)) {
+        duplicateCount += 1;
+        return;
+      }
+
+      galleryItems.push({
+        id: Date.now() + Math.floor(Math.random() * 1000000) + addedCount,
+        image: link,
+        description: '',
+        order: galleryItems.length + 1,
+      });
+
+      existingImages.add(normalizedLink);
+      addedCount += 1;
+    });
+
+    normalizeOrders();
+    persistGalleryData();
+    renderAdminList();
+
+    if (bulkImageLinksInput) {
+      bulkImageLinksInput.value = '';
+    }
+
+    if (addedCount > 0 && duplicateCount > 0) {
+      showToast(`${addedCount} image(s) added. ${duplicateCount} duplicate skipped.`);
+    } else if (addedCount > 0) {
+      showToast(`${addedCount} image(s) added.`);
+    } else {
+      showToast('All detected links already exist.');
+    }
   });
 
   resetFormBtn?.addEventListener('click', resetAdminForm);
@@ -549,10 +610,10 @@ function initAdminPage() {
       const node = template.content.firstElementChild.cloneNode(true);
       node.dataset.id = String(item.id);
       node.querySelector('.admin-item__thumb').src = item.image;
-      node.querySelector('.admin-item__thumb').alt = item.description;
+      node.querySelector('.admin-item__thumb').alt = item.description || 'No description';
       node.querySelector('.admin-item__order').textContent = `Order ${item.order}`;
       node.querySelector('.admin-item__path').textContent = item.image;
-      node.querySelector('.admin-item__description').textContent = item.description;
+      node.querySelector('.admin-item__description').textContent = item.description || 'No description yet';
 
       node.querySelector('.admin-edit').addEventListener('click', () => fillForm(item));
       node.querySelector('.admin-delete').addEventListener('click', () => {
@@ -609,6 +670,34 @@ function initAdminPage() {
       renderAdminList();
     });
   }
+}
+
+function extractImageLinks(text) {
+  const matches = text.match(/https?:\/\/[^\s"'<>]+/gi) || [];
+
+  const cleaned = matches
+    .map((link) => link.trim().replace(/[),.;]+$/, ''))
+    .filter((link) => isLikelyImageUrl(link));
+
+  return [...new Set(cleaned)];
+}
+
+function isLikelyImageUrl(url) {
+  const lowerUrl = url.toLowerCase();
+
+  return (
+    /\.(jpg|jpeg|png|gif|webp|bmp|svg|avif)(\?.*)?$/.test(lowerUrl) ||
+    lowerUrl.includes('images') ||
+    lowerUrl.includes('image') ||
+    lowerUrl.includes('img') ||
+    lowerUrl.includes('cloudinary') ||
+    lowerUrl.includes('unsplash') ||
+    lowerUrl.includes('cdn')
+  );
+}
+
+function normalizeImageUrl(url) {
+  return String(url || '').trim().replace(/\/+$/, '').toLowerCase();
 }
 
 function init() {

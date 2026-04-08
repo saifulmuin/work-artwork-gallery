@@ -302,19 +302,13 @@ body.light-theme .lightbox__panel {
   inset: 0 0 120px;
   overflow: hidden;
   touch-action: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+  display: grid;
+  place-items: center;
 }
 
 .lightbox__image {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto !important;
-  height: auto !important;
-  object-fit: contain;
+  max-width: min(92vw, 1000px);
+  max-height: calc(100% - 32px);
   user-select: none;
   cursor: grab;
   transform-origin: center center;
@@ -654,4 +648,14 @@ body.light-theme .lightbox__footer {
   .admin-item__actions .btn {
     flex: 1;
   }
+}
+
+.bulk-upload-heading {
+  margin-top: 28px;
+  padding-top: 6px;
+}
+
+#bulkImageLinks {
+  min-height: 180px;
+  resize: vertical;
 }
