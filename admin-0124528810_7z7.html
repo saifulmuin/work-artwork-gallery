@@ -65,11 +65,15 @@
             <button type="button" class="btn" id="resetFormBtn">Reset</button>
           </div>
         </form>
+		
+		
 
         <div class="section-heading bulk-upload-heading">
           <h2>Bulk Upload Links</h2>
           <p>Paste multiple image URLs below. One link per line, or mix with other text — the system will auto detect valid image links and add them as new items.</p>
         </div>
+        
+
 
         <div class="admin-form">
           <label class="field">
@@ -85,7 +89,33 @@ Any text is okay too — valid image links will still be detected."></textarea>
             <button type="button" class="btn" id="clearBulkUploadBtn">Clear</button>
           </div>
         </div>
+        
+        
+        
+        <div class="section-heading bulk-upload-heading">
+  <h2>Bulk Image Drag & Drop</h2>
+  <p>Drop multiple image files here. This will create gallery items using <code>images/filename.ext</code>. You still need to upload the real files into your repo’s <code>/images/</code> folder.</p>
+</div>
+
+<div class="admin-form">
+  <div id="bulkImageDropzone" class="bulk-dropzone">
+    <input id="bulkImageFiles" type="file" accept="image/*" multiple hidden />
+    <p class="bulk-dropzone__title">Drag & drop images here</p>
+    <p class="bulk-dropzone__text">or click to browse multiple image files</p>
+  </div>
+
+  <div id="bulkImageDropList" class="bulk-drop-list is-hidden"></div>
+
+  <div class="form-actions">
+    <button type="button" class="btn btn--primary" id="bulkImageFileAddBtn">Add Dropped Images</button>
+    <button type="button" class="btn" id="clearBulkImageFilesBtn">Clear</button>
+  </div>
+</div>
+        
+        
       </section>
+
+
 
       <section class="admin-card admin-card--list">
         <div class="section-heading section-heading--split">
