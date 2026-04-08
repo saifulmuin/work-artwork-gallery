@@ -149,14 +149,12 @@ function renderGallery() {
     card.innerHTML = `
       <div class="gallery-card__image-wrap">
         <img class="gallery-card__image" src="${item.image}" alt="${escapeHtml(item.description || `Gallery image ${index + 1}`)}" loading="lazy" />
-
+        <div class="gallery-card__overlay">
+          <div class="gallery-card__description">${escapeHtml(item.description || 'No description')}</div>
+        </div>
       </div>
     `;
 
-    // ni barang yang boleh letak dekat line (atas) ke 4 dari sini - untuk bagi appear description dekat image masa dekat landing page
-       // <div class="gallery-card__overlay">
-       //   <div class="gallery-card__description">${escapeHtml(item.description || 'No description')}</div>
-       // </div>
     const img = card.querySelector('img');
     img.addEventListener('load', () => card.classList.add('is-loaded'));
     img.addEventListener('error', () => {
@@ -411,6 +409,15 @@ function initAdminPage() {
 
   const bulkImageLinksInput = document.getElementById('bulkImageLinks');
   const bulkUploadBtn = document.getElementById('bulkUploadBtn');
+  const clearBulkUploadBtn = document.getElementById('clearBulkUploadBtn');
+
+const bulkImageDropzone = document.getElementById('bulkImageDropzone');
+const bulkImageFilesInput = document.getElementById('bulkImageFiles');
+const bulkImageDropList = document.getElementById('bulkImageDropList');
+const bulkImageFileAddBtn = document.getElementById('bulkImageFileAddBtn');
+const clearBulkImageFilesBtn = document.getElementById('clearBulkImageFilesBtn');
+
+let pendingBulkImageFiles = [];
 
   loadGalleryData().then(() => {
     renderAdminList();
@@ -635,6 +642,142 @@ function initAdminPage() {
 
   let draggedId = null;
 
+clearBulkUploadBtn?.addEventListener('click', () => {
+  if (bulkImageLinksInput) bulkImageLinksInput.value = '';
+  showToast('Bulk links cleared.');
+});
+
+function renderPendingBulkFiles() {
+  if (!bulkImageDropList) return;
+
+  if (!pendingBulkImageFiles.length) {
+    bulkImageDropList.innerHTML = '';
+    bulkImageDropList.classList.add('is-hidden');
+    return;
+  }
+
+  bulkImageDropList.classList.remove('is-hidden');
+  bulkImageDropList.innerHTML = pendingBulkImageFiles
+    .map((file) => `<div class="bulk-drop-list__item">${escapeHtml(file.name)}</div>`)
+    .join('');
+}
+
+function setPendingBulkFiles(files) {
+  const onlyImages = [...files].filter((file) => file.type.startsWith('image/'));
+
+  if (!onlyImages.length) {
+    showToast('No valid image files detected.');
+    return;
+  }
+
+  const existingNames = new Set(
+    pendingBulkImageFiles.map((file) => file.name.toLowerCase())
+  );
+
+  let addedCount = 0;
+
+  onlyImages.forEach((file) => {
+    const key = file.name.toLowerCase();
+    if (!existingNames.has(key)) {
+      pendingBulkImageFiles.push(file);
+      existingNames.add(key);
+      addedCount += 1;
+    }
+  });
+
+  renderPendingBulkFiles();
+
+  if (addedCount > 0) {
+    showToast(`${addedCount} image file(s) ready.`);
+  } else {
+    showToast('All selected images are already in the pending list.');
+  }
+}
+
+
+bulkImageDropzone?.addEventListener('click', () => {
+  bulkImageFilesInput?.click();
+});
+
+bulkImageFilesInput?.addEventListener('change', (event) => {
+  const files = event.target.files || [];
+  setPendingBulkFiles(files);
+  event.target.value = '';
+});
+
+bulkImageDropzone?.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  bulkImageDropzone.classList.add('is-active');
+});
+
+bulkImageDropzone?.addEventListener('dragleave', () => {
+  bulkImageDropzone.classList.remove('is-active');
+});
+
+bulkImageDropzone?.addEventListener('drop', (event) => {
+  event.preventDefault();
+  bulkImageDropzone.classList.remove('is-active');
+
+  const files = event.dataTransfer?.files || [];
+  setPendingBulkFiles(files);
+});
+
+bulkImageFileAddBtn?.addEventListener('click', () => {
+  if (!pendingBulkImageFiles.length) {
+    showToast('Drag or select image files first.');
+    return;
+  }
+
+  const existingImages = new Set(
+    galleryItems.map((item) => normalizeImageUrl(item.image))
+  );
+
+  let addedCount = 0;
+  let duplicateCount = 0;
+
+  pendingBulkImageFiles.forEach((file) => {
+    const imagePath = `images/${file.name}`;
+    const normalizedPath = normalizeImageUrl(imagePath);
+
+    if (existingImages.has(normalizedPath)) {
+      duplicateCount += 1;
+      return;
+    }
+
+    galleryItems.push({
+      id: Date.now() + Math.floor(Math.random() * 1000000) + addedCount,
+      image: imagePath,
+      description: '',
+      order: galleryItems.length + 1,
+    });
+
+    existingImages.add(normalizedPath);
+    addedCount += 1;
+  });
+
+  normalizeOrders();
+  persistGalleryData();
+  renderAdminList();
+
+  pendingBulkImageFiles = [];
+  renderPendingBulkFiles();
+
+  if (addedCount > 0 && duplicateCount > 0) {
+    showToast(`${addedCount} image(s) added. ${duplicateCount} duplicate skipped.`);
+  } else if (addedCount > 0) {
+    showToast(`${addedCount} image(s) added.`);
+  } else {
+    showToast('All dropped images already exist.');
+  }
+});
+
+clearBulkImageFilesBtn?.addEventListener('click', () => {
+  pendingBulkImageFiles = [];
+  renderPendingBulkFiles();
+  if (bulkImageFilesInput) bulkImageFilesInput.value = '';
+  showToast('Dropped images cleared.');
+});
+
   function attachDragHandlers(node, itemId) {
     node.addEventListener('dragstart', () => {
       draggedId = itemId;
@@ -656,21 +799,23 @@ function initAdminPage() {
       node.classList.remove('drag-over');
     });
 
-    node.addEventListener('drop', (event) => {
-      event.preventDefault();
-      node.classList.remove('drag-over');
-      if (draggedId === null || draggedId === itemId) return;
+  node.addEventListener('drop', (event) => {
+    event.preventDefault();
+    node.classList.remove('drag-over');
+    if (draggedId === null || draggedId === itemId) return;
 
-      const fromIndex = galleryItems.findIndex((entry) => entry.id === draggedId);
-      const toIndex = galleryItems.findIndex((entry) => entry.id === itemId);
-      if (fromIndex < 0 || toIndex < 0) return;
+    const fromIndex = galleryItems.findIndex((entry) => entry.id === draggedId);
+    const toIndex = galleryItems.findIndex((entry) => entry.id === itemId);
+    if (fromIndex < 0 || toIndex < 0) return;
 
-      const [movedItem] = galleryItems.splice(fromIndex, 1);
-      galleryItems.splice(toIndex, 0, movedItem);
-      normalizeOrders();
-      persistGalleryData();
-      renderAdminList();
-    });
+    const [movedItem] = galleryItems.splice(fromIndex, 1);
+    galleryItems.splice(toIndex, 0, movedItem);
+
+    normalizeOrders();
+    persistGalleryData();
+    renderAdminList();
+    showToast('Order updated.');
+  });
   }
 }
 
