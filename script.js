@@ -122,6 +122,121 @@ function createSkeletonCards() {
   }
 }
 
+
+const galleryLoader = {
+  total: 0,
+  loaded: 0,
+  isActive: false,
+  finishCallback: null,
+  elements: {},
+
+  init() {
+    if (this.elements.root) return;
+
+    const root = document.createElement('div');
+    root.id = 'galleryLoader';
+    root.className = 'gallery-loader';
+    root.setAttribute('role', 'status');
+    root.setAttribute('aria-live', 'polite');
+    root.innerHTML = `
+      <div class="gallery-loader__card">
+        <div class="gallery-loader__spinner" aria-hidden="true"></div>
+        <div class="gallery-loader__percentage">0%</div>
+        <div class="gallery-loader__text">Loading gallery images...</div>
+      </div>
+    `;
+
+    document.body.appendChild(root);
+    this.elements.root = root;
+    this.elements.percentage = root.querySelector('.gallery-loader__percentage');
+    this.elements.text = root.querySelector('.gallery-loader__text');
+  },
+
+  start(total, onFinish) {
+    this.init();
+    this.total = Math.max(Number(total) || 0, 0);
+    this.loaded = 0;
+    this.finishCallback = typeof onFinish === 'function' ? onFinish : null;
+
+    if (!this.total) {
+      this.finish();
+      return;
+    }
+
+    this.isActive = true;
+    document.body.classList.add('gallery-is-loading');
+    this.elements.root.classList.add('is-active');
+    this.update();
+  },
+
+  increment() {
+    if (!this.isActive) return;
+    this.loaded = Math.min(this.loaded + 1, this.total);
+    this.update();
+
+    if (this.loaded >= this.total) {
+      window.setTimeout(() => this.finish(), 260);
+    }
+  },
+
+  update() {
+    const percentage = this.total ? Math.round((this.loaded / this.total) * 100) : 100;
+    if (this.elements.percentage) this.elements.percentage.textContent = `${percentage}%`;
+    if (this.elements.text) {
+      this.elements.text.textContent = this.loaded >= this.total
+        ? 'Gallery ready'
+        : `Loading gallery images... ${this.loaded}/${this.total}`;
+    }
+  },
+
+  finish() {
+    const callback = this.finishCallback;
+    this.isActive = false;
+    this.finishCallback = null;
+    this.loaded = this.total;
+    this.update();
+    document.body.classList.remove('gallery-is-loading');
+    this.elements.root?.classList.remove('is-active');
+    if (callback) callback();
+  },
+};
+
+function resizeMasonryItem(card) {
+  const galleryGrid = document.getElementById('galleryGrid');
+  if (!galleryGrid || !card) return;
+
+  const styles = window.getComputedStyle(galleryGrid);
+  const rowHeight = parseFloat(styles.getPropertyValue('grid-auto-rows'));
+  const rowGap = parseFloat(styles.getPropertyValue('row-gap'));
+
+  if (!Number.isFinite(rowHeight) || rowHeight <= 0) return;
+
+  card.style.gridRowEnd = '';
+  const cardHeight = card.getBoundingClientRect().height;
+  const safeRowGap = Number.isFinite(rowGap) ? rowGap : 0;
+  const rowSpan = Math.ceil((cardHeight + safeRowGap) / (rowHeight + safeRowGap));
+
+  card.style.gridRowEnd = `span ${rowSpan}`;
+}
+
+function resizeAllMasonryItems() {
+  document.querySelectorAll('#galleryGrid .gallery-card').forEach((card) => {
+    resizeMasonryItem(card);
+  });
+}
+
+const resizeMasonryAfterLayout = (() => {
+  let frameId = null;
+
+  return () => {
+    if (frameId) cancelAnimationFrame(frameId);
+    frameId = requestAnimationFrame(() => {
+      resizeAllMasonryItems();
+      frameId = null;
+    });
+  };
+})();
+
 function renderGallery() {
   const galleryGrid = document.getElementById('galleryGrid');
   const emptyState = document.getElementById('galleryEmpty');
@@ -140,6 +255,11 @@ function renderGallery() {
   emptyState.classList.add('is-hidden');
   galleryGrid.classList.remove('is-hidden');
 
+  galleryLoader.start(galleryItems.length, () => {
+    if (skeleton) skeleton.classList.remove('is-active');
+    resizeMasonryAfterLayout();
+  });
+
   galleryItems.forEach((item, index) => {
     const card = document.createElement('article');
     card.className = 'gallery-card';
@@ -148,7 +268,7 @@ function renderGallery() {
     card.setAttribute('aria-label', `Open image ${index + 1}`);
     card.innerHTML = `
       <div class="gallery-card__image-wrap">
-        <img class="gallery-card__image" src="${item.image}" alt="${escapeHtml(item.description || `Gallery image ${index + 1}`)}" loading="lazy" />
+        <img class="gallery-card__image" src="${item.image}" alt="${escapeHtml(item.description || `Gallery image ${index + 1}`)}" loading="eager" decoding="async" />
                            
       </div>
     `;
@@ -158,10 +278,19 @@ function renderGallery() {
        //   <div class="gallery-card__description">${escapeHtml(item.description || 'No description')}</div>
        // </div>
     const img = card.querySelector('img');
-    img.addEventListener('load', () => card.classList.add('is-loaded'));
-    img.addEventListener('error', () => {
+    let hasFinishedLoading = false;
+    const markImageReady = () => {
+      if (hasFinishedLoading) return;
+      hasFinishedLoading = true;
       card.classList.add('is-loaded');
+      resizeMasonryItem(card);
+      galleryLoader.increment();
+    };
+
+    img.addEventListener('load', markImageReady);
+    img.addEventListener('error', () => {
       img.alt = 'Image not found';
+      markImageReady();
     });
 
     card.addEventListener('click', () => lightbox.open(index));
@@ -173,9 +302,13 @@ function renderGallery() {
     });
 
     galleryGrid.appendChild(card);
+
+    if (img.complete) {
+      requestAnimationFrame(markImageReady);
+    }
   });
 
-  if (skeleton) skeleton.classList.remove('is-active');
+  resizeMasonryAfterLayout();
 }
 
 function escapeHtml(text) {
@@ -394,6 +527,8 @@ function initGalleryPage() {
     renderGallery();
     lightbox.init();
   });
+
+  window.addEventListener('resize', resizeMasonryAfterLayout);
 }
 
 function initAdminPage() {
